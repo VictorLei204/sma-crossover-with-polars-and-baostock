@@ -15,6 +15,10 @@ def check_data_completeness(df: pl.DataFrame, start_date: str, end_date: str) ->
     Returns:
         tuple[bool, str]: (数据是否完整, 错误信息)
     """
+    # 检查数据是否为空
+    if len(df) == 0:
+        return False, f"未找到股票数据，该股票可能已退市或代码错误"
+    
     # 转换日期字符串为datetime对象
     start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
     end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
