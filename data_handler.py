@@ -19,7 +19,7 @@ def check_data_completeness(df: pl.DataFrame, start_date: str, end_date: str) ->
     """
     # 检查数据是否为空
     if len(df) == 0:
-        return False, f"未找到股票数据，该股票可能已退市或代码错误"
+        return False, "未找到股票数据，该股票可能已退市或代码错误"
     
     # 转换日期字符串为datetime对象
     start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -96,8 +96,9 @@ def fetch_stock_data(stock_code: str, start_date: str, end_date: str) -> pl.Data
         
         # 转换为DataFrame
         data_list = []
-        while (rs.error_code == '0') & rs.next():
-            data_list.append(rs.get_row_data())
+        if rs is not None:
+            while (rs.error_code == '0') & rs.next():
+                data_list.append(rs.get_row_data())
         
         # 登出系统
         bs.logout()

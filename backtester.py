@@ -60,7 +60,7 @@ class SMABacktester:
         
         return fees
     
-    def run_backtest(self, signals: pl.DataFrame = None) -> pl.DataFrame:
+    def run_backtest(self, signals: pl.DataFrame | None = None) -> pl.DataFrame:
         """
         执行回测
         
