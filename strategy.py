@@ -33,4 +33,9 @@ def add_sma_signals(df: pl.DataFrame, short_window: int, long_window: int) -> pl
         .alias("signal")
     ])
     
+    # 将信号向后移动一天，这样t日的交易会使用t-1日的信号
+    df = df.with_columns([
+        pl.col("signal").shift(1).alias("signal")
+    ])
+    
     return df 

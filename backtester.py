@@ -79,7 +79,7 @@ class SMABacktester:
         # 遍历每个交易日
         for row in df.iter_rows(named=True):
             date = row["date"]
-            price = row["close"]
+            price = row["open"]  # 使用开盘价进行交易
             signal = row["signal"]
             
             # 根据信号执行交易
@@ -116,13 +116,13 @@ class SMABacktester:
                 ))
                 self.shares = 0
             
-            # 记录每日资产价值
-            total_value = self.cash + self.shares * price
+            # 记录每日资产价值（使用收盘价计算）
+            total_value = self.cash + self.shares * row["close"]
             self.portfolio_history.append({
                 "date": date,
                 "cash": self.cash,
                 "shares": self.shares,
-                "stock_value": self.shares * price,
+                "stock_value": self.shares * row["close"],
                 "total_value": total_value
             })
         
