@@ -1,5 +1,6 @@
-import polars as pl
 import numpy as np
+import polars as pl
+
 
 def calculate_total_return(portfolio_history: pl.DataFrame) -> float:
     """

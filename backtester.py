@@ -1,6 +1,7 @@
-import polars as pl
 from dataclasses import dataclass
-from typing import List, Dict
+
+import polars as pl
+
 
 @dataclass
 class Trade:

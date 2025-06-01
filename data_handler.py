@@ -1,7 +1,9 @@
-import baostock as bs
-import polars as pl
 import os
 from datetime import datetime, timedelta
+
+import baostock as bs
+import polars as pl
+
 
 def check_data_completeness(df: pl.DataFrame, start_date: str, end_date: str) -> tuple[bool, str]:
     """

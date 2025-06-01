@@ -1,8 +1,9 @@
-import data_handler as dh
-import strategy as st
 import backtester as bt
+import data_handler as dh
 import performance as pf
+import strategy as st
 import visualizer as vis
+
 
 def main():
     # 设置参数

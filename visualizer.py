@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import polars as pl
 
+
 def plot_equity_curve(portfolio_history: pl.DataFrame, title: str = "Equity Curve") -> None:
     """
     绘制资产净值曲线

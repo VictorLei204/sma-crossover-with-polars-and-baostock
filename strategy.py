@@ -1,5 +1,6 @@
 import polars as pl
 
+
 def add_sma_signals(df: pl.DataFrame, short_window: int, long_window: int) -> pl.DataFrame:
     """
     计算移动平均线并生成交易信号
