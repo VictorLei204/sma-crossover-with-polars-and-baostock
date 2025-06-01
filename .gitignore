@@ -10,3 +10,4 @@ wheels/
 .venv
 
 roadmap.md
+*.csv

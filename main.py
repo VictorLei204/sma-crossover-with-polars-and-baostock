@@ -17,9 +17,6 @@ def main():
     print("获取股票数据...")
     df = dh.fetch_stock_data(stock_code, start_date, end_date)
     
-    # 保存数据到CSV（可选）
-    dh.save_data_to_csv(df, f"{stock_code.replace('.', '_')}_data.csv")
-    
     # 计算均线和信号
     print("计算技术指标和交易信号...")
     df_with_signals = st.add_sma_signals(df, short_window, long_window)
