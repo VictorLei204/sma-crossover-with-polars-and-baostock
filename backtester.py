@@ -11,67 +11,122 @@ class Trade:
     value: float
 
 class SMABacktester:
-    def __init__(self, initial_capital: float, stock_data: pl.DataFrame):
+    def __init__(self, stock_data: pl.DataFrame, initial_capital: float = 100000.0):
         """
         初始化回测器
         
         Args:
+            stock_data: 包含股票数据的DataFrame
             initial_capital: 初始资金
-            stock_data: 包含价格和信号的DataFrame
         """
-        self.initial_capital = initial_capital
         self.stock_data = stock_data
+        self.initial_capital = initial_capital
         self.cash = initial_capital
-        self.shares_held = 0
-        self.trades: List[Trade] = []
-        self.portfolio_history: List[Dict] = []
+        self.shares = 0
+        self.portfolio_history = []
+        self.trades = []  # 初始化交易记录列表
+        
+        # 交易费用设置
+        self.commission_rate = 0.0003  # 佣金率：万分之三
+        self.stamp_tax_rate = 0.001    # 印花税率：千分之一
+        self.transfer_fee_rate = 0.001  # 过户费率：每1000股1元，按比例计算
     
-    def run_backtest(self) -> None:
-        """执行回测"""
-        for i in range(len(self.stock_data)):
-            current_row = self.stock_data.row(i)
-            current_date = current_row[0]
-            current_price = current_row[3]  # close price
-            signal = current_row[-1]  # signal column
+    def calculate_trading_fees(self, price: float, shares: int, is_buy: bool) -> float:
+        """
+        计算交易费用
+        
+        Args:
+            price: 交易价格
+            shares: 交易股数
+            is_buy: 是否为买入操作
+        
+        Returns:
+            float: 交易费用总额
+        """
+        amount = price * shares
+        fees = 0
+        
+        # 佣金
+        fees += amount * self.commission_rate
+        
+        # 印花税（仅卖出时收取）
+        if not is_buy:
+            fees += amount * self.stamp_tax_rate
+        
+        # 过户费（上海股票收取）
+        if self.stock_data.select("code").row(0)[0].startswith("sh"):
+            fees += shares * self.transfer_fee_rate
+        
+        return fees
+    
+    def run_backtest(self, signals: pl.DataFrame = None) -> pl.DataFrame:
+        """
+        执行回测
+        
+        Args:
+            signals: 包含交易信号的DataFrame，如果为None则使用stock_data中的signal列
+        
+        Returns:
+            plars.DataFrame: 回测结果
+        """
+        # 合并数据和信号
+        if signals is None:
+            df = self.stock_data
+        else:
+            df = self.stock_data.join(signals, on="date")
+        
+        # 遍历每个交易日
+        for row in df.iter_rows(named=True):
+            date = row["date"]
+            price = row["close"]
+            signal = row["signal"]
             
-            # 更新当前持仓市值
-            position_value = self.shares_held * current_price
-            total_value = self.cash + position_value
-            
-            # 记录每日资产状态
-            self.portfolio_history.append({
-                'date': current_date,
-                'cash': self.cash,
-                'position_value': position_value,
-                'total_value': total_value
-            })
-            
-            # 处理交易信号
-            if signal == 1 and self.shares_held == 0:  # 买入信号
-                shares_to_buy = int(self.cash / current_price)
-                if shares_to_buy > 0:
-                    cost = shares_to_buy * current_price
-                    self.cash -= cost
-                    self.shares_held = shares_to_buy
+            # 根据信号执行交易
+            if signal == 1 and self.shares == 0:  # 买入信号
+                # 计算可买入的股数（考虑手续费）
+                max_shares = int(self.cash / (price * (1 + self.commission_rate + self.transfer_fee_rate)))
+                if max_shares > 0:
+                    # 计算交易费用
+                    fees = self.calculate_trading_fees(price, max_shares, True)
+                    # 执行交易
+                    self.shares = max_shares
+                    self.cash -= (price * max_shares + fees)
+                    # 记录交易
                     self.trades.append(Trade(
-                        date=str(current_date),
-                        type='buy',
-                        price=current_price,
-                        shares=shares_to_buy,
-                        value=cost
+                        date=date,
+                        type="buy",
+                        price=price,
+                        shares=max_shares,
+                        value=price * max_shares
                     ))
             
-            elif signal == -1 and self.shares_held > 0:  # 卖出信号
-                value = self.shares_held * current_price
-                self.cash += value
+            elif signal == -1 and self.shares > 0:  # 卖出信号
+                # 计算交易费用
+                fees = self.calculate_trading_fees(price, self.shares, False)
+                # 执行交易
+                self.cash += (price * self.shares - fees)
+                # 记录交易
                 self.trades.append(Trade(
-                    date=str(current_date),
-                    type='sell',
-                    price=current_price,
-                    shares=self.shares_held,
-                    value=value
+                    date=date,
+                    type="sell",
+                    price=price,
+                    shares=self.shares,
+                    value=price * self.shares
                 ))
-                self.shares_held = 0
+                self.shares = 0
+            
+            # 记录每日资产价值
+            total_value = self.cash + self.shares * price
+            self.portfolio_history.append({
+                "date": date,
+                "cash": self.cash,
+                "shares": self.shares,
+                "stock_value": self.shares * price,
+                "total_value": total_value
+            })
+        
+        # 转换为DataFrame
+        return pl.DataFrame(self.portfolio_history)
     
     def get_portfolio_history(self) -> pl.DataFrame:
         """获取回测期间的资产历史"""

@@ -23,7 +23,7 @@ def main():
     
     # 执行回测
     print("执行回测...")
-    backtester = bt.SMABacktester(initial_capital, df_with_signals)
+    backtester = bt.SMABacktester(df_with_signals, initial_capital)
     backtester.run_backtest()
     
     # 获取回测结果
