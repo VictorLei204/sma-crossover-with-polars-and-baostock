@@ -11,3 +11,4 @@ wheels/
 
 roadmap.md
 *.csv
+./*.csv
