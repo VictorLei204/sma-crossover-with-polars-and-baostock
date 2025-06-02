@@ -86,6 +86,9 @@ class SMABacktester:
             if signal == 1 and self.shares == 0:  # 买入信号
                 # 计算可买入的股数（考虑手续费）
                 max_shares = int(self.cash / (price * (1 + self.commission_rate + self.transfer_fee_rate)))
+                # 向下取整到最接近的100股
+                max_shares = (max_shares // 100) * 100
+                
                 if max_shares > 0:
                     # 计算交易费用
                     fees = self.calculate_trading_fees(price, max_shares, True)
