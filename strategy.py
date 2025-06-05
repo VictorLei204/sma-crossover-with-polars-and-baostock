@@ -19,13 +19,17 @@ def add_sma_signals(df: pl.DataFrame, short_window: int, long_window: int) -> pl
         pl.col("close").rolling_mean(window_size=long_window).alias(f"sma_{long_window}")
     ])
     
-    # 生成交易信号
+    # 生成交易信号（只在两个均线都有值时才生成信号）
     df = df.with_columns([
         pl.when(
+            (pl.col(f"sma_{short_window}").is_not_null()) &
+            (pl.col(f"sma_{long_window}").is_not_null()) &
             (pl.col(f"sma_{short_window}") > pl.col(f"sma_{long_window}")) &
             (pl.col(f"sma_{short_window}").shift(1) <= pl.col(f"sma_{long_window}").shift(1))
         ).then(1)  # 金叉买入信号
         .when(
+            (pl.col(f"sma_{short_window}").is_not_null()) &
+            (pl.col(f"sma_{long_window}").is_not_null()) &
             (pl.col(f"sma_{short_window}") < pl.col(f"sma_{long_window}")) &
             (pl.col(f"sma_{short_window}").shift(1) >= pl.col(f"sma_{long_window}").shift(1))
         ).then(-1)  # 死叉卖出信号
