@@ -16,20 +16,27 @@ def calculate_total_return(portfolio_history: pl.DataFrame) -> float:
     final_value = portfolio_history.select("total_value").row(-1)[0]
     return (final_value / initial_value) - 1
 
-def calculate_annualized_return(portfolio_history: pl.DataFrame, num_trading_days_year: int = 252) -> float:
+def calculate_annualized_return(portfolio_history: pl.DataFrame) -> float:
     """
     计算年化收益率
     
     Args:
         portfolio_history: 包含每日资产价值的DataFrame
-        num_trading_days_year: 一年的交易日数量
     
     Returns:
         float: 年化收益率
     """
     total_return = calculate_total_return(portfolio_history)
-    num_days = len(portfolio_history)
-    return (1 + total_return) ** (num_trading_days_year / num_days) - 1
+    
+    # 获取第一个和最后一个交易日
+    first_date = portfolio_history.select("date").row(0)[0]
+    last_date = portfolio_history.select("date").row(-1)[0]
+    
+    # 计算实际投资天数
+    days = (last_date - first_date).days
+    
+    # 计算年化收益率
+    return (1 + total_return) ** (365 / days) - 1
 
 def calculate_sharpe_ratio(portfolio_history: pl.DataFrame, risk_free_rate: float = 0.02, num_trading_days_year: int = 252) -> float:
     """
