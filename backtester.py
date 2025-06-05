@@ -47,8 +47,9 @@ class SMABacktester:
         amount = price * shares
         fees = 0
         
-        # 佣金
-        fees += amount * self.commission_rate
+        # 佣金（最低5元）
+        commission = amount * self.commission_rate
+        fees += max(commission, 5.0)
         
         # 印花税（仅卖出时收取）
         if not is_buy:
