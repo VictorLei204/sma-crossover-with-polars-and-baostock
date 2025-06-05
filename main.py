@@ -3,16 +3,22 @@ import data_handler as dh
 import performance as pf
 import strategy as st
 import visualizer as vis
+import config
 
 
 def main():
-    # 设置参数
-    stock_code = "sh.600000"  # 浦发银行
-    start_date = "2020-01-01"
-    end_date = "2024-12-31"
-    short_window = 20
-    long_window = 60
-    initial_capital = 100000
+    # 加载配置
+    cfg = config.load_config()
+
+    # 从配置文件获取参数
+    stock_code = cfg["stock_code"]
+    start_date = cfg["start_date"]
+    end_date = cfg["end_date"]
+    short_window = cfg["short_window"]
+    long_window = cfg["long_window"]
+    initial_capital = cfg["initial_capital"]
+
+    print(f"使用配置: 股票={stock_code}, 时间={start_date}到{end_date}, 均线={short_window}/{long_window}, 资金={initial_capital}")
     
     # 获取数据
     print("获取股票数据...")
@@ -24,7 +30,8 @@ def main():
     
     # 执行回测
     print("执行回测...")
-    backtester = bt.SMABacktester(df_with_signals, initial_capital)
+    trading_fees = cfg.get("trading_fees", {})
+    backtester = bt.SMABacktester(df_with_signals, initial_capital, trading_fees)
     backtester.run_backtest()
     
     # 获取回测结果

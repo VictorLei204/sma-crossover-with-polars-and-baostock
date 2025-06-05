@@ -9,6 +9,7 @@
 - 模拟交易执行
 - 计算绩效指标
 - 生成交易记录和图表
+- 配置文件管理
 
 ## 环境要求
 
@@ -18,13 +19,35 @@
 
 ## 使用
 
-1. 配置 `main.py` 参数：
-   - 股票代码（如：'sh.600000'）
-   - 回测起止日期
-   - 均线周期
-   - 初始资金
-2. 交易费用在`backtester.py`中配置
-3. 运行回测
+### 基本使用
+
+建议使用`uv`管理环境
+
+```bash
+uv sync
+uv run main.py
+```
+
+### 配置文件
+程序会自动读取 `config.json` 配置文件。如果文件不存在，会自动创建默认配置。
+
+配置文件示例：
+```json
+{
+  "stock_code": "sh.600000",
+  "start_date": "2020-01-01",
+  "end_date": "2024-12-31",
+  "short_window": 20,
+  "long_window": 60,
+  "initial_capital": 100000,
+  "trading_fees": {
+    "commission_rate": 0.0003,
+    "stamp_tax_rate": 0.001,
+    "transfer_fee_rate": 0.001,
+    "min_commission": 5.0
+  }
+}
+```
 
 ## 输出
 

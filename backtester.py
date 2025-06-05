@@ -12,13 +12,14 @@ class Trade:
     value: float
 
 class SMABacktester:
-    def __init__(self, stock_data: pl.DataFrame, initial_capital: float = 100000.0):
+    def __init__(self, stock_data: pl.DataFrame, initial_capital: float = 100000.0, trading_fees: dict | None = None):
         """
         初始化回测器
         
         Args:
             stock_data: 包含股票数据的DataFrame
             initial_capital: 初始资金
+            trading_fees: 交易费用配置字典
         """
         self.stock_data = stock_data
         self.initial_capital = initial_capital
@@ -26,11 +27,20 @@ class SMABacktester:
         self.shares = 0
         self.portfolio_history = []
         self.trades = []  # 初始化交易记录列表
-        
-        # 交易费用设置
-        self.commission_rate = 0.0003  # 佣金率：万分之三
-        self.stamp_tax_rate = 0.001    # 印花税率：千分之一
-        self.transfer_fee_rate = 0.001  # 过户费率：每1000股1元，按比例计算
+
+        # 交易费用设置（从配置或使用默认值）
+        if trading_fees is None:
+            trading_fees = {
+                "commission_rate": 0.0003,
+                "stamp_tax_rate": 0.001,
+                "transfer_fee_rate": 0.001,
+                "min_commission": 5.0
+            }
+
+        self.commission_rate = trading_fees.get("commission_rate", 0.0003)
+        self.stamp_tax_rate = trading_fees.get("stamp_tax_rate", 0.001)
+        self.transfer_fee_rate = trading_fees.get("transfer_fee_rate", 0.001)
+        self.min_commission = trading_fees.get("min_commission", 5.0)
     
     def calculate_trading_fees(self, price: float, shares: int, is_buy: bool) -> float:
         """
@@ -47,9 +57,9 @@ class SMABacktester:
         amount = price * shares
         fees = 0
         
-        # 佣金（最低5元）
+        # 佣金（有最低佣金限制）
         commission = amount * self.commission_rate
-        fees += max(commission, 5.0)
+        fees += max(commission, self.min_commission)
         
         # 印花税（仅卖出时收取）
         if not is_buy:
