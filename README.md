@@ -16,6 +16,7 @@
 - baostock
 - polars
 - matplotlib
+- 在一些Linux发行版中，为确保图像正确显示，需要安装python3-tk(如`sudo apt install python3-tk`)，并使用对应版本的Python解释器，如`python3-tk/noble,now 3.12.3-0ubuntu1 amd64`对应`Python 3.12.3`(其他系统未经测试)
 
 ## 使用
 
