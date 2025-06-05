@@ -83,8 +83,35 @@ class SMABacktester:
             price = row["open"]  # 使用开盘价进行交易
             signal = row["signal"]
             
+            # 检查是否停牌（成交量为0）
+            if row["volume"] == 0:
+                # 记录资产价值（使用前一日收盘价）
+                total_value = self.cash + self.shares * row["close"]
+                self.portfolio_history.append({
+                    "date": date,
+                    "cash": self.cash,
+                    "shares": self.shares,
+                    "stock_value": self.shares * row["close"],
+                    "total_value": total_value
+                })
+                continue
+            
             # 根据信号执行交易
             if signal == 1 and self.shares == 0:  # 买入信号
+                # 检查是否涨停（开盘价等于涨停价）
+                prev_close = row["close"] * 1.1  # 涨停价
+                if price >= prev_close:
+                    # 涨停无法买入，记录资产价值
+                    total_value = self.cash + self.shares * row["close"]
+                    self.portfolio_history.append({
+                        "date": date,
+                        "cash": self.cash,
+                        "shares": self.shares,
+                        "stock_value": self.shares * row["close"],
+                        "total_value": total_value
+                    })
+                    continue
+                
                 # 计算可买入的股数（考虑手续费）
                 max_shares = int(self.cash / (price * (1 + self.commission_rate + self.transfer_fee_rate)))
                 # 向下取整到最接近的100股
@@ -106,6 +133,20 @@ class SMABacktester:
                     ))
             
             elif signal == -1 and self.shares > 0:  # 卖出信号
+                # 检查是否跌停（开盘价等于跌停价）
+                prev_close = row["close"] * 0.9  # 跌停价
+                if price <= prev_close:
+                    # 跌停无法卖出，记录资产价值
+                    total_value = self.cash + self.shares * row["close"]
+                    self.portfolio_history.append({
+                        "date": date,
+                        "cash": self.cash,
+                        "shares": self.shares,
+                        "stock_value": self.shares * row["close"],
+                        "total_value": total_value
+                    })
+                    continue
+                
                 # 计算交易费用
                 fees = self.calculate_trading_fees(price, self.shares, False)
                 # 执行交易
