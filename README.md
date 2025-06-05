@@ -1,4 +1,4 @@
-# SMA Crossover Strategy Backtest System
+# SMA Crossover with Polars and Baostock
 
 基于双移动平均线交叉策略的回测，使用 `baostock` 获取A股数据，`polars` 进行数据处理。
 
